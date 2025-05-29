@@ -4,10 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>LawLite — AI Legal Docs for Canadians</title>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
-    rel="stylesheet"
-  />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <style>
     body {
       margin: 0;
@@ -43,12 +40,16 @@
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     }
-    input,
-    select {
+    input, select {
       padding: 0.75rem;
       font-size: 1rem;
       border: 1px solid #ccc;
       border-radius: 6px;
+      transition: border-color 0.3s ease;
+    }
+    input:focus, select:focus {
+      border-color: #2b7cff;
+      outline: none;
     }
     button {
       background-color: #2b7cff;
@@ -64,19 +65,13 @@
     button:hover {
       background-color: #1a5fd0;
     }
-    #formMessage {
+    #message {
       color: green;
-      display: none;
-      text-align: center;
-      margin-top: 1rem;
       font-weight: 600;
-    }
-    #formError {
-      color: red;
-      display: none;
+      font-size: 1.125rem;
       text-align: center;
-      margin-top: 1rem;
-      font-weight: 600;
+      display: none;
+      margin-top: 1.5rem;
     }
   </style>
 </head>
@@ -86,56 +81,58 @@
     <p>Instant, lawyer-reviewed NDAs, leases, and immigration forms — for a fraction of the price.</p>
   </header>
   <section>
-    <form id="leadForm">
-      <input type="text" name="name" id="name" placeholder="Your name" required />
-      <input type="email" name="email" id="email" placeholder="Your email" required />
-      <select name="document" id="document" required>
-        <option value="">Select document type</option>
+    <form id="waitlist-form">
+      <input type="text" name="name" placeholder="Your name" required />
+      <input type="email" name="email" placeholder="Your email" required />
+      <select name="document" required>
+        <option value="" disabled selected>Select document type</option>
         <option value="NDA">Non-Disclosure Agreement (NDA)</option>
         <option value="Lease">Residential Lease Agreement</option>
         <option value="Immigration">Immigration Form Help</option>
       </select>
       <button type="submit">Join the Waitlist</button>
     </form>
-    <p id="formMessage">Thank you! You’re on the waitlist.</p>
-    <p id="formError">Oops! Something went wrong. Please try again.</p>
+    <p id="message">Thank you! You have been added to the waitlist.</p>
   </section>
 
   <script>
-    const form = document.getElementById('leadForm');
-    const message = document.getElementById('formMessage');
-    const error = document.getElementById('formError');
+    const form = document.getElementById('waitlist-form');
+    const message = document.getElementById('message');
 
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const data = {
         name: form.name.value.trim(),
         email: form.email.value.trim(),
-        document: form.document.value,
+        document: form.document.value
       };
 
-      const scriptURL = 'https://script.google.com/macros/s/AKfycbxzrVf5EDWFQjuSlrizIKmkYqZvZwfOTOZDhEpavi6Wnw9cgpzGRrZKrcuVACWmeLQu/exec';
+      // Simple validation to ensure document type is selected
+      if (!data.document) {
+        alert('Please select a document type.');
+        return;
+      }
 
-      fetch(scriptURL, {
-        method: 'POST',
-        body: JSON.stringify(data),
-        headers: { 'Content-Type': 'application/json' },
-      })
-        .then((response) => response.json())
-        .then((json) => {
-          if (json.result === 'success') {
-            message.style.display = 'block';
-            error.style.display = 'none';
-            form.reset();
-          } else {
-            throw new Error(json.error || 'Unknown error');
-          }
-        })
-        .catch(() => {
-          message.style.display = 'none';
-          error.style.display = 'block';
+      try {
+        const response = await fetch('https://script.google.com/macros/s/AKfycbxzrVf5EDWFQjuSlrizIKmkYqZvZwfOTOZDhEpavi6Wnw9cgpzGRrZKrcuVACWmeLQu/exec', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
         });
+
+        if (response.ok) {
+          form.style.display = 'none';
+          message.style.display = 'block';
+        } else {
+          alert('Submission failed. Please try again later.');
+        }
+      } catch (error) {
+        alert('There was a problem submitting your request. Please check your internet connection and try again.');
+        console.error('Form submission error:', error);
+      }
     });
   </script>
 </body>
